@@ -18,6 +18,8 @@ This fork is an attempt to get LeGO-LOAM to compile and run in a docker containe
         - /map
         - /camera_init
         - /base_link
+    - also need to change /aft_mapped and /aft_mapped_to_init
+    
 
 ## Known Issues
 
@@ -77,7 +79,28 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
     - Using these instead could potentially fix some things like the voxel_grid.h problem
 - gtsam CMakeLists.txt should have an option to force usage of system Eigen instead of their modified Eigen. 
     - need to investigate what features would be lost. See their readme.
+- the static transforms in run.launch
+    ```
+    <node pkg="tf" type="static_transform_publisher" name="camera_init_to_map"  args="0 0 0 1.570795   0        1.570795 map    camera_init 10" />
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_camera" args="0 0 0 -1.570795 -1.570795 0        camera base_link   10" />
+    ```
+    - not really sure what these signify. Seems to do things like map the x-axis of one frame to the z-axis of another. Possibly LOAM related.
 
+## Usage
+
+- Map Cloud
+    - /laser_cloud_surround
+    - frame_id: camera_init
+    - hz: 0.2
+- Map Cloud (stack)
+    - /registered_cloud
+    - frame_id: camera_init
+    - hz: 2.5
+- Trajectory
+    - /key_pose_origin
+    - hz: 2.5
+    - this is a point cloud which actually represents the fully corrected odometry of the robot. That is, loop closure will correct this
+    - frame_id: camera_init
 
 ## LeGO-LOAM Sample Bag
 
