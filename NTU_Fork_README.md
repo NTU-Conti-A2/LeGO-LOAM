@@ -13,6 +13,11 @@ This fork is an attempt to get LeGO-LOAM to compile and run in a docker containe
         find_package(Boost REQUIRED COMPONENTS timer thread serialization chrono) 
         ```
     - 
+- frame ids (removing leading forwardslash)
+    - changed run.launch file 
+        - /map
+        - /camera_init
+        - /base_link
 
 ## Known Issues
 
@@ -28,7 +33,8 @@ This fork is an attempt to get LeGO-LOAM to compile and run in a docker containe
         apt install libparmetis-dev 
         ```
 - tf2 compatibility
-    - LeGO-LOAM hardcodes a lot of frame names with leading backslashes. This is illegal in tf2.
+    - LeGO-LOAM hardcodes a lot of frame names with leading forward slashes. This is illegal in tf2.
+    - removed them all from the launch and cpp files. remove these from frame_id variables, not ros topic names.
 
 
 
