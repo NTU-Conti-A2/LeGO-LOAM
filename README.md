@@ -1,4 +1,36 @@
-# LeGO-LOAM
+# How to use
+Make sure your system has **docker** and **docker-compose** installed.
+### 1) Build ntu-lego-loam image
+Navigate to the parent directory of the repo run:
+
+    docker build -t ntu-lego-loam:latest -f docker/Dockerfile .
+├── LeGO-LOAM (parent)
+│   ├── include
+│   ├── launch
+│   └── src
+├── cloud_msgs
+│   └── msg
+└── docker
+
+### 2) Run the ntu-lego-loam container
+Navigate into the docker folder and run docker-compose up -d:
+
+    cd docker
+    docker-compose up -d
+
+### 3) Run the LeGo-LOAM launch files
+Open a shell instance of the container using:
+
+    docker exec -it docker_dev_lego-loam_1 zsh
+Run the Lego-LOAM launch file using:
+
+    roslaunch lego_loam run.launch
+To open your local rviz with preset settings using:
+    
+    cd ../LeGO-LOAM/launch
+    rosrun rviz rviz -d test.rviz
+
+# LeGO-LOAM (Original Repo)
 
 This repository contains code for a lightweight and ground optimized lidar odometry and mapping (LeGO-LOAM) system for ROS compatible UGVs. The system takes in point cloud  from a Velodyne VLP-16 Lidar (palced horizontally) and optional IMU data as inputs. It outputs 6D pose estimation in real-time. A demonstration of the system can be found here -> https://www.youtube.com/watch?v=O3tz_ftHV48
 <!--
