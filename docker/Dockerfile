@@ -67,7 +67,7 @@ RUN mkdir -p /root/catkin_ws/src && \
 # Compile LeGO-LOAM
 WORKDIR /root
 # RUN mkdir -p ~/catkin_ws/src && cd ~/catkin_ws/src && git clone https://github.com/RobustFieldAutonomyLab/LeGO-LOAM.git
-# Copying NTU LeGO-LOAM repo into docker build context (must build in parent directory "docker built -t ntu-lego-loam:latest -f docker/Dockerfile")
+# Copying NTU LeGO-LOAM repo into docker build context (must build in parent directory "docker build -t ntu-lego-loam:latest -f docker/Dockerfile .")
 COPY . /root/catkin_ws/src/LeGO-LOAM
 RUN /usr/bin/zsh -c 'source /opt/ros/noetic/setup.zsh; cd ~/catkin_ws ; catkin_make -j4'
 # Removing source file as will be bind-mounting in docker-compose
