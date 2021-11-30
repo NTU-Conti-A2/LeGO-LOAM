@@ -10,3 +10,5 @@ export CC=gcc-10
 export CXX=g++-10
 cmake ..
 sudo make install
+
+apt install libparmetis-dev 
