@@ -4,7 +4,8 @@ Make sure your system has **docker** and **docker-compose** installed.
 Navigate to the parent directory of the repo run:
 
     docker build -t ntu-lego-loam:latest -f docker/Dockerfile .
-├── **LeGO-LOAM (parent)**<br>
+**LeGO-LOAM** (Parent)<br>
+├── LeGO-LOAM<br>
 │   ├── include<br>
 │   ├── launch<br>
 │   └── src<br>
