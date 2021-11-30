@@ -12,7 +12,7 @@ FROM osrf/ros:noetic-desktop-full
 ARG DEBIAN_FRONTEND=noninteractive
 
 # install useful things
-RUN apt-get update && apt-get install -y wget git vim unzip
+RUN apt-get update && apt-get install -y wget git vim unzip libparmetis-dev
 
 # install zsh
 RUN apt-get update && apt-get install -y zsh && \
@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y zsh && \
     git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 
 # tell Docker to use zsh as it builds. Probably not important.
-SHELL ["usr/bin/zsh","-c"]
+SHELL ["/usr/bin/zsh","-c"]
 
 # configure zsh. add any desired pluigns here.
 RUN echo "source /opt/ros/noetic/setup.zsh" >> ~/.zshrc && \
@@ -48,19 +48,29 @@ RUN pip install python-igraph
 # LeGO-LOAM Stuff
 
 ## install LeGO-LOAM dependencies - GTSAM
-# RUN wget -O ~/gtsam.zip https://github.com/borglab/gtsam/archive/4.0.0-alpha2.zip
-# RUN cd ~/ && unzip gtsam.zip
-# RUN cd ~/gtsam-4.0.0-alpha2/ && mkdir build && cd build && cmake .. && make install -j4
-
-# Compile LeGO-LOAM
-# RUN mkdir -p ~/catkin_ws/src && cd ~/catkin_ws/src && git clone https://github.com/RobustFieldAutonomyLab/LeGO-LOAM.git
-# RUN /bin/sh -c '. /opt/ros/melodic/setup.sh; cd ~/catkin_ws ; catkin_make -j4'
+WORKDIR /tmp
+RUN wget -O gtsam.zip https://github.com/borglab/gtsam/archive/4.0.0-alpha2.zip
+RUN unzip gtsam.zip
+RUN cd gtsam-4.0.0-alpha2 && mkdir build && cd build && cmake .. && make -j$(nproc) 2> /dev/null && make install
 
 # create a catkin_ws
 RUN mkdir -p /root/catkin_ws/src && \
     cd /root/catkin_ws && \
     source /opt/ros/noetic/setup.zsh && \
     catkin_make
+
+# Compile LeGO-LOAM
+WORKDIR /root
+# RUN mkdir -p ~/catkin_ws/src && cd ~/catkin_ws/src && git clone https://github.com/RobustFieldAutonomyLab/LeGO-LOAM.git
+# Copying NTU LeGO-LOAM repo into docker build context (must build in parent directory "docker built -t ntu-lego-loam:latest -f docker/Dockerfile")
+COPY . /root/catkin_ws/src/LeGO-LOAM
+# Edit serialization to fix lidar_align (not sure if needed)
+RUN sed -i '9c #include "lz4.h"' /usr/include/flann/util/serialization.h
+RUN sed -i '10c #include "lz4hc.h"' /usr/include/flann/util/serialization.h
+# Edit voxel Eigen::Index error by substituting it with int
+RUN sed -i '340s/.*/for (int ni = 0; ni < relative_coordinates.cols (); ni++)/' /usr/include/pcl-1.10/pcl/filters/voxel_grid.h
+RUN sed -i '669s/.*/for (int ni = 0; ni < relative_coordinates.cols (); ni++)/' /usr/include/pcl-1.10/pcl/filters/voxel_grid.h
+RUN /usr/bin/zsh -c 'source /opt/ros/noetic/setup.zsh; cd ~/catkin_ws ; catkin_make -j4'
 
 # enable auto overlaying our workspace
 RUN echo "source /root/catkin_ws/devel/setup.zsh" >> ~/.zshrc
