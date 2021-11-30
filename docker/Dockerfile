@@ -55,7 +55,8 @@ RUN pip install python-igraph
 WORKDIR /tmp
 RUN wget -O gtsam.zip https://github.com/borglab/gtsam/archive/refs/tags/4.0.3.zip
 RUN unzip gtsam.zip
-RUN cd gtsam-4.0.3 && mkdir build && cd build && cmake .. && make -j$(nproc) 2> /dev/null && make install
+RUN cd gtsam-4.0.3 && mkdir build && cd build && cmake .. && make install -j$(nproc)
+RUN rm -rf gtsam-4.0.3 gtsam.zip
 
 # create a catkin_ws
 RUN mkdir -p /root/catkin_ws/src && \
@@ -69,6 +70,8 @@ WORKDIR /root
 # Copying NTU LeGO-LOAM repo into docker build context (must build in parent directory "docker built -t ntu-lego-loam:latest -f docker/Dockerfile")
 COPY . /root/catkin_ws/src/LeGO-LOAM
 RUN /usr/bin/zsh -c 'source /opt/ros/noetic/setup.zsh; cd ~/catkin_ws ; catkin_make -j4'
+# Removing source file as will be bind-mounting in docker-compose
+RUN rm -rf /root/catkin_ws/src/LeGO-LOAM
 
 # enable auto overlaying our workspace
 RUN echo "source /root/catkin_ws/devel/setup.zsh" >> ~/.zshrc
