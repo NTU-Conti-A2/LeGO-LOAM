@@ -4,13 +4,13 @@ Make sure your system has **docker** and **docker-compose** installed.
 Navigate to the parent directory of the repo run:
 
     docker build -t ntu-lego-loam:latest -f docker/Dockerfile .
-├── LeGO-LOAM (parent)
-│   ├── include
-│   ├── launch
-│   └── src
-├── cloud_msgs
-│   └── msg
-└── docker
+├── **LeGO-LOAM (parent)**<br>
+│   ├── include<br>
+│   ├── launch<br>
+│   └── src<br>
+├── cloud_msgs<br>
+│   └── msg<br>
+└── docker<br>
 
 ### 2) Run the ntu-lego-loam container
 Navigate into the docker folder and run docker-compose up -d:
