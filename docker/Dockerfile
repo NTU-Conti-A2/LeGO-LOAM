@@ -56,10 +56,19 @@ RUN pip install python-igraph
 # RUN mkdir -p ~/catkin_ws/src && cd ~/catkin_ws/src && git clone https://github.com/RobustFieldAutonomyLab/LeGO-LOAM.git
 # RUN /bin/sh -c '. /opt/ros/melodic/setup.sh; cd ~/catkin_ws ; catkin_make -j4'
 
+# create a catkin_ws
+RUN mkdir -p /root/catkin_ws/src && \
+    cd /root/catkin_ws && \
+    source /opt/ros/noetic/setup.zsh && \
+    catkin_make
 
-RUN echo "source /ext-code/catkin_ws/devel/setup.zsh" >> ~/.zshrc
+# enable auto overlaying our workspace
+RUN echo "source /root/catkin_ws/devel/setup.zsh" >> ~/.zshrc
 
 # overwrites the entrypoint the ros-images had set
 ENTRYPOINT []
 CMD ["/bin/zsh"]
+
+# these aren't quite working. would be nice to always launch into the workspace.
+# CMD cd /root/catkin_ws && zsh 
 # CMD ["zsh"]

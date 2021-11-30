@@ -3,10 +3,11 @@
 
 version: "3.8"
 services:
-    dev_LeGO-LOAM:
+    dev_lego-loam:
         build: .
         volumes:
-            - ..:/ext-code
+            # - ..:/ext-code
+            - ..:/root/catkin_ws/src/LeGO-LOAM
             - /tmp/.X11-unix:/tmp/.X11-unix
             - /mnt/wslg:/mnt/wslg
         environment:
