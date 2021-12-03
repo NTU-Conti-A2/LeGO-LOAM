@@ -4,7 +4,8 @@
 version: "3.8"
 services:
     dev_lego-loam:
-        build: .
+        # build: .
+        image: ntu-lego-loam:latest
         volumes:
             # - ..:/ext-code
             - ..:/root/catkin_ws/src/LeGO-LOAM

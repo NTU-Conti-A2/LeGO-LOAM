@@ -12,14 +12,17 @@ This fork is an attempt to get LeGO-LOAM to compile and run in a docker containe
         ```
         find_package(Boost REQUIRED COMPONENTS timer thread serialization chrono) 
         ```
-    - as per https://github.com/RobustFieldAutonomyLab/LeGO-LOAM/issues/224  
+    - as per https://github.com/RobustFieldAutonomyLab/LeGO-LOAM/issues/224
 - frame ids (removing leading forwardslash)
     - changed run.launch file 
         - /map
         - /camera_init
         - /base_link
     - also need to change /aft_mapped and /aft_mapped_to_init
-    
+- Updated to use **gtsam4.0.3** instead of gtsam4.0.0-alpha2 to fix the issue of complaint about Eigen::Index not being found (see Known Issue - voxel_grid.h)
+- Included `ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib` in Dockerfile due to unlinked library error
+  - "libmetis-gtsam.so: cannot open shared object file: No such file or directory"
+  - Another workaround is just `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib` when inside container
 
 ## Known Issues
 
