@@ -2,8 +2,10 @@ This fork is an attempt to get LeGO-LOAM to compile and run in a docker containe
 
 ## Notable Changes
 
-- utility.h has the opencv header file #Include updated to 
+- update from opencv to opencv2
+  - utility.h has the opencv header file #Include updated to 
     ```
+    // #include <opencv/cv.h>
     #include <opencv2/opencv.hpp> // update opencv version
     ```
 - CMakeLists.txt
@@ -13,28 +15,54 @@ This fork is an attempt to get LeGO-LOAM to compile and run in a docker containe
         find_package(Boost REQUIRED COMPONENTS timer thread serialization chrono) 
         ```
     - as per https://github.com/RobustFieldAutonomyLab/LeGO-LOAM/issues/224
-- frame ids (removing leading forwardslash)
+- update tf to tf2
+  - had to adjust frame ids 
+  - removed leading forwardslash to enable support for tf2
     - changed run.launch file 
         - /map
         - /camera_init
         - /base_link
     - also need to change /aft_mapped and /aft_mapped_to_init
-- Updated to use **gtsam4.0.3** instead of gtsam4.0.0-alpha2 to fix the issue of complaint about Eigen::Index not being found (see Known Issue - voxel_grid.h)
+- gtsam version update
+  - Updated to use **gtsam4.0.3** instead of gtsam4.0.0-alpha2 to fix the issue of complaint about Eigen::Index not being found (see Known Issue - voxel_grid.h)
 - Included `ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib` in Dockerfile due to unlinked library error
   - "libmetis-gtsam.so: cannot open shared object file: No such file or directory"
   - Another workaround is just `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib` when inside container
 
-## Known Issues
+## Config Changes for Corriere
+
+- the LIDAR topic/frame
+    - /rslidar_points with the frame_id: "rslidar"
+    - change utility.h
+        - pointCloudTopic = "/rslidar_points"
+        - useCloudRing = false;
+        - parameters
+            - Horizon_SCAN = 3600
+            - ang_res_x = 0.18
+        - sensorMinimumRange was left as the original 1.0
+- imu seems the same 
+- dawei used https://github.com/HTLife/lego_loam_docker which has some changes already made.
+    - why was sensorMinimumRange removed? Actually, a bunch of stuff was deleted for no clear reason. 
+        - delete the PointXYZIR struct? and delete the corresponding macro?
+            - this seems unnecessary, since it's not used anywhere if you just set the flag to false
+            - most point clouds are of type PointType which is typedef in utility.h
+- the main issue is adjusting to the lack of a ring channel in the lidar points
+    - it appears that LeGO-LOAM was originally designed for non ring channel points, so this isn't too hard
+- enabled loop closure
+
+
+## Known Issues (and how they were solved)
 
 - utility.h will include pcl header files that fail to compile due to a complaint about Eigen::Index not being found
     -  see https://github.com/RobustFieldAutonomyLab/LeGO-LOAM/issues/215 
         - for the voxel_grid.h edit fix, and other proposed solutions
-    - currently, we do in fact just replace references to Eigen::Index with int
+    - originally, we did in fact just replace references to Eigen::Index with int
     - /usr/include/pcl-1.10/pcl/filters/voxel_grid.h
     - this is probably a result of the Gtsam dependency including a modified version of Eigen which is too old to define this member, since the system Eigen should be high enough
-        - the suggested version of gtsam is 4.0.0-alpha2 which was released Sep 24 2017 https://github.com/borglab/gtsam/releases/tag/4.0.0-alpha2
-        - based on commit history at https://github.com/borglab/gtsam/commits/develop/gtsam/3rdparty/Eigen , this used Eigen 3.2.10
-            - can also check the output of running 'cmake ..' when building gtsam, which also shows the 'Use System Eigen' flag status.
+        - the vanilla LeGO-LOAM suggested version of gtsam is 4.0.0-alpha2 
+          - which was released Sep 24 2017 https://github.com/borglab/gtsam/releases/tag/4.0.0-alpha2
+          - based on commit history at https://github.com/borglab/gtsam/commits/develop/gtsam/3rdparty/Eigen , this used Eigen 3.2.10
+          - can also check the output of running 'cmake ..' when building gtsam, which also shows the 'Use System Eigen' flag status.
         - the next update was Oct 10 2018, to Eigen 3.3.4 , which should be sufficient to resolve the Eigen::Index compilation error.
 
             ```
@@ -47,8 +75,8 @@ This fork is an attempt to get LeGO-LOAM to compile and run in a docker containe
             /usr/include/pcl-1.10/pcl/filters/voxel_grid.h:340:21: error: ‘Index’ is not a member of ‘Eigen’
             340 |         for (Eigen::Index ni = 0; ni < relative_coordinates.cols (); ni++)
             ```  
-        - this (generated with catkin_make VERBOSE=1) seems to confirm that gtsam Eigen is causing the error.
-        - unfortunately, updating to Gtsam 4.0.3 can results in 
+        - this (generated with catkin_make VERBOSE=1) does show that the ```-I/usr/local/include/gtsam/3rdparty/Eigen``` is being used during compilation, which seems to confirm that gtsam Eigen is causing the error.
+        - unfortunately, updating to Gtsam 4.0.3 can result in 
             ```
             cc1plus: error: bad value (‘tigerlake’) for ‘-march=’ switch
             ```
@@ -71,10 +99,14 @@ This fork is an attempt to get LeGO-LOAM to compile and run in a docker containe
                 cmake ..
                 make install
                 ```
+        - Thus in the end we updated to Gtsam4.0.3 and used environment variables to use a more modern compiler to compile it.
 
 
 - libmetis.so
     - for some reason, the system may fail to find this library
+    ```
+    /ext-code/catkin_ws/devel/lib/lego_loam/mapOptmization: error while loading shared libraries: libmetis-gtsam.so: cannot open shared object file: No such file or directory
+    ```
     - fixed by 
         ``` 
         apt install libparmetis-dev 
@@ -85,27 +117,7 @@ This fork is an attempt to get LeGO-LOAM to compile and run in a docker containe
     - removed them all from the launch and cpp files. remove these from frame_id variables, not ros topic names.
 
 
-## Changes for Corriere
 
-- the LIDAR topic/frame
-    - /rslidar_points with the frame_id: "rslidar"
-    - change utility.h
-        - pointCloudTopic = "/rslidar_points"
-        - useCloudRing = false;
-        - parameters
-            - Horizon_SCAN = 3600
-            - ang_res_x = 0.18
-        - sensorMinimumRange was left as the original 1.0
-- imu seems the same 
-- dawei used https://github.com/HTLife/lego_loam_docker which has some changes already made.
-    - why was sensorMinimumRange removed? Actually, a bunch of stuff was deleted for no clear reason. 
-        - delete the PointXYZIR struct? and delete the corresponding macro?
-            - this seems unnecessary, since it's not used anywhere if you just set the flag to false
-            - most point clouds are of type PointType which is typedef in utility.h
-- the main issue is adjusting to the lack of a ring channel in the lidar points
-    - it appears that LeGO-LOAM was originally designed for non ring channel points, so this isn't too hard
-
-- enabled loop closure
 
 ## Misc
 
@@ -130,21 +142,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
     ```
     - not really sure what these signify. Seems to do things like map the x-axis of one frame to the z-axis of another. Possibly LOAM related.
 
-## Usage
 
-- Map Cloud
-    - /laser_cloud_surround
-    - frame_id: camera_init
-    - hz: 0.2
-- Map Cloud (stack)
-    - /registered_cloud
-    - frame_id: camera_init
-    - hz: 2.5
-- Trajectory
-    - /key_pose_origin
-    - hz: 2.5
-    - this is a point cloud which actually represents the fully corrected odometry of the robot. That is, loop closure will correct this
-    - frame_id: camera_init
 
 ## LeGO-LOAM Sample Bag
 
