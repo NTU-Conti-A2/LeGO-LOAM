@@ -153,3 +153,34 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
     - frame_id: "imu_link"
 
 
+## Debugging Help
+
+```
+  -- +++ processing catkin package: 'lego_loam'
+  -- ==> add_subdirectory(LeGO-LOAM/LeGO-LOAM)
+  -- Using these message generators: gencpp;geneus;genlisp;gennodejs;genpy
+  CMake Error at LeGO-LOAM/LeGO-LOAM/CMakeLists.txt:23 (find_package):
+    By not providing "FindGTSAM.cmake" in CMAKE_MODULE_PATH this project has
+    asked CMake to find a package configuration file provided by "GTSAM", but
+    CMake did not find one.
+
+    Could not find a package configuration file provided by "GTSAM" with any of
+    the following names:
+
+      GTSAMConfig.cmake
+      gtsam-config.cmake
+
+    Add the installation prefix of "GTSAM" to CMAKE_PREFIX_PATH or set
+    "GTSAM_DIR" to a directory containing one of the above files.  If "GTSAM"
+    provides a separate development package or SDK, be sure it has been
+    installed.
+
+
+  -- Configuring incomplete, errors occurred!
+  See also "/ext-code/catkin_ws/build/CMakeFiles/CMakeOutput.log".
+  See also "/ext-code/catkin_ws/build/CMakeFiles/CMakeError.log".
+  make: *** [Makefile:2994: cmake_check_build_system] Error 1
+  Invoking "make cmake_check_build_system" failed
+```
+
+Probably means you are trying to build a catkin workspace that includes this repo without installing gtsam correctly, all the way up to 'make install' etc.
